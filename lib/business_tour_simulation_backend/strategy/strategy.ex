@@ -3,6 +3,8 @@ defmodule MonopolySimulation.Strategy do
   alias MonopolySimulation.Venue.{City, Resort}
   alias __MODULE__.{Config, Build, Repurchase, Sell, HoldWorldChampionship, PickFlightDestination, PickJailOption, PickChance}
 
+  @behaviour __MODULE__.Behaviour
+
   @venue_visit_frequency [
     %{"frequency" => 1.0, "id" => "start"},
     %{"frequency" => 1.029, "id" => "granada"},

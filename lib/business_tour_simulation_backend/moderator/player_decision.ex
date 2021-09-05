@@ -227,7 +227,7 @@ defmodule MonopolySimulation.Moderator.PlayerDecision do
       true <- Venue.repurchasable?(venue),
       true <- Player.can_afford?(player, venue)
     ) do
-      [%{action: {:repurchase, venue}, required?: false}]
+      [%{action: {:repurchase, venue}, need_inquire_player?: false}]
     else
       _ -> []
     end
@@ -243,8 +243,8 @@ defmodule MonopolySimulation.Moderator.PlayerDecision do
   defp actions_derived_from_decision({:pick_jail_option, decision}, _player_id, _game_state) do
     case decision do
       :roll_dices -> []
-      {:pay, _amount} -> [%{action: :roll_dices, required?: true}]
-      :use_free_card -> [%{action: :roll_dices, required?: true}]
+      {:pay, _amount} -> [%{action: :roll_dices, need_inquire_player?: true}]
+      :use_free_card -> [%{action: :roll_dices, need_inquire_player?: true}]
     end
   end
 
@@ -253,7 +253,6 @@ defmodule MonopolySimulation.Moderator.PlayerDecision do
 
   defp actions_derived_from_decision(_decision, _player_id, _game_state), do: []
 
-  defdelegate broadcast(decision, player, game_state, game_id), to: __MODULE__.Broadcaster
   defdelegate validate(scenario, decision), to: __MODULE__.Validator
   defdelegate save_log(decision, player, game_state, game_logs), to: __MODULE__.Log
 end

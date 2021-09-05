@@ -82,7 +82,7 @@ defmodule MonopolySimulation.Moderator.PlayerDecision.Chance do
     end
 
     if options.cities != [] || options.resorts != [],
-      do: [%{action: {action, options}, required?: false}],
+      do: [%{action: {action, options}, need_inquire_player?: false}],
       else: []
   end
 
@@ -95,7 +95,7 @@ defmodule MonopolySimulation.Moderator.PlayerDecision.Chance do
         when own_resorts != []
         <- GameState.player_own_venues(game_state, player.id)
     ) do
-      [%{action: {:hold_world_championship, options}, required?: false}]
+      [%{action: {:hold_world_championship, options}, need_inquire_player?: false}]
     else
       _ -> []
     end
@@ -127,7 +127,7 @@ defmodule MonopolySimulation.Moderator.PlayerDecision.Chance do
         :forced_sale -> :force_sale
       end
     if options.cities != [] || options.resorts != [],
-      do: [%{action: {action, options}, required?: false}],
+      do: [%{action: {action, options}, need_inquire_player?: false}],
       else: []
   end
 
@@ -136,7 +136,7 @@ defmodule MonopolySimulation.Moderator.PlayerDecision.Chance do
     %{cities: own_cities, resorts: own_resorts} = options
     opponents = Enum.filter(game_state.players, & &1.id != player_id && &1.bankrupt_turn == nil)
     if own_cities != [] || own_resorts != [],
-      do: [%{action: {:gift, options, opponents}, required?: false}],
+      do: [%{action: {:gift, options, opponents}, need_inquire_player?: false}],
       else: []
   end
 

@@ -268,14 +268,14 @@ defmodule MonopolySimulation.Moderator do
 
     decision =
       case scenario do
-        %{required?: false} ->
+        %{need_inquire_player?: false} ->
           {:ok, decision} = GenServer.call(player_pid, {:player_decision, scenario, game_state}, @player_decision_timeout)
           case PlayerDecision.validate(scenario.action, decision) do
             {:ok, _} -> elaborate_decision(decision, scenario.action)
             {:error, reason} -> throw reason
           end
 
-        %{required?: true, action: action} ->
+        %{need_inquire_player?: true, action: action} ->
           case action do
             {:bankrupt, player} -> {:bankrupt, player, state.current_turn}
             action -> action

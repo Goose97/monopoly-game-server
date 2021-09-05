@@ -67,14 +67,14 @@ defmodule MonopolySimulation.Moderator.Planner do
         has_options? = options.cities != [] || options.resorts != []
 
         if player.balance >= Data.airport_cost() && has_options?,
-          do: [%{action: {:pick_flight_destination, options}, required?: false}],
-          else: [%{action: :roll_dices, required?: true}]
+          do: [%{action: {:pick_flight_destination, options}, need_inquire_player?: false}],
+          else: [%{action: :roll_dices, need_inquire_player?: true}]
 
       :jail ->
         if get_in(game_state, [:jail, :players, player.id, :turn_count]) == Data.max_turn_in_jail() do
           [
-            %{action: {:out_of_jail, player.id}, required?: true},
-            %{action: :roll_dices, required?: true}
+            %{action: {:out_of_jail, player.id}, need_inquire_player?: true},
+            %{action: :roll_dices, need_inquire_player?: true}
           ]
         else
           options = [:roll_dices]
@@ -86,10 +86,10 @@ defmodule MonopolySimulation.Moderator.Planner do
             if Player.has_item?(player, :free_from_jail),
             do: options ++ [:use_free_card],
             else: options
-          [%{action: {:pick_jail_option, options}, required?: false}]
+          [%{action: {:pick_jail_option, options}, need_inquire_player?: false}]
         end
 
-      _ -> [%{action: :roll_dices, required?: true}]
+      _ -> [%{action: :roll_dices, need_inquire_player?: true}]
     end
 
     ensure_has_player_id(actions, player.id)
@@ -111,7 +111,7 @@ defmodule MonopolySimulation.Moderator.Planner do
     build_action =
       case Player.affordable_upgrades(player, city) do
         [] -> nil
-        upgrades -> %{action: {:build, city, upgrades}, required?: false}
+        upgrades -> %{action: {:build, city, upgrades}, need_inquire_player?: false}
       end
 
     case city do
@@ -144,7 +144,7 @@ defmodule MonopolySimulation.Moderator.Planner do
       %{owner: nil} ->
         upgrades = Player.affordable_upgrades(player, resort)
         if upgrades != [],
-          do: [%{action: {:build, resort, upgrades}, required?: false}],
+          do: [%{action: {:build, resort, upgrades}, need_inquire_player?: false}],
           else: []
 
       %{owner: ^player_id} -> []
@@ -165,7 +165,7 @@ defmodule MonopolySimulation.Moderator.Planner do
   end
 
   defp get_actions_after_move(:jail, _venue_id, player, _game_state),
-    do: [%{action: {:go_to_jail, player.id}, required?: true}]
+    do: [%{action: {:go_to_jail, player.id}, need_inquire_player?: true}]
 
   defp get_actions_after_move(:world_championship, _venue_id, player, game_state) do
     with(
@@ -175,7 +175,7 @@ defmodule MonopolySimulation.Moderator.Planner do
         when own_resorts != []
         <- GameState.player_own_venues(game_state, player.id)
     ) do
-      [%{action: {:hold_world_championship, options}, required?: false}]
+      [%{action: {:hold_world_championship, options}, need_inquire_player?: false}]
     else
       _ -> []
     end
@@ -194,14 +194,14 @@ defmodule MonopolySimulation.Moderator.Planner do
   end
 
   defp get_actions_after_move(:airport, _venue_id, _player, _game_state),
-    do: [%{action: :go_to_airport, required?: true}]
+    do: [%{action: :go_to_airport, need_inquire_player?: true}]
 
   defp get_actions_after_move(:start, _venue_id, _player, _game_state),
     do: []
 
   defp get_actions_after_move(:chance, _venue_id, _player, _game_state) do
     chance = GameSystem.random_chance()
-    [%{action: {:chance, chance}, required?: true}]
+    [%{action: {:chance, chance}, need_inquire_player?: true}]
   end
 
   def generate_pay_action(params) do
@@ -214,7 +214,7 @@ defmodule MonopolySimulation.Moderator.Planner do
     } = params
 
     if payer.balance >= amount do
-      [%{action: {:pay, recipient, amount, pay_reason}, required?: true}]
+      [%{action: {:pay, recipient, amount, pay_reason}, need_inquire_player?: true}]
     else
       sell_options = GameState.player_own_venues(game_state, payer.id)
       total_venue_worth = Enum.map(
@@ -226,14 +226,14 @@ defmodule MonopolySimulation.Moderator.Planner do
       if total_player_worth > amount do
         missing_amount = amount - payer.balance
         [
-          %{action: {:sell, missing_amount, sell_options}, required?: false},
-          %{action: {:pay, recipient, amount, pay_reason}, required?: true}
+          %{action: {:sell, missing_amount, sell_options}, need_inquire_player?: false},
+          %{action: {:pay, recipient, amount, pay_reason}, need_inquire_player?: true}
         ]
       else
         [
-          %{action: {:sell, payer.id, sell_options.cities ++ sell_options.resorts}, required?: true},
-          %{action: {:pay, recipient, total_player_worth, pay_reason}, required?: true},
-          %{action: {:bankrupt, payer}, required?: true}
+          %{action: {:sell, payer.id, sell_options.cities ++ sell_options.resorts}, need_inquire_player?: true},
+          %{action: {:pay, recipient, total_player_worth, pay_reason}, need_inquire_player?: true},
+          %{action: {:bankrupt, payer}, need_inquire_player?: true}
         ]
       end
     end
@@ -244,13 +244,13 @@ defmodule MonopolySimulation.Moderator.Planner do
     cond do
       Player.has_item?(player, :double_rent) ->
         {
-          %{action: {:use_item, :double_rent}, required?: true},
+          %{action: {:use_item, :double_rent}, need_inquire_player?: true},
           Data.double_rent_multiplier()
         }
 
       Player.has_item?(player, :halve_rent) ->
         {
-          %{action: {:use_item, :halve_rent}, required?: true},
+          %{action: {:use_item, :halve_rent}, need_inquire_player?: true},
           Data.halve_rent_multiplier()
         }
 
